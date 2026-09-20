@@ -35,6 +35,25 @@ struct DuplicateGroupRow: View {
                             .padding(.vertical, 5)
                     }
                     .buttonStyle(.frostPrimary)
+
+                    // "Liked" only exists for Apple Photos library assets, not local-folder scans.
+                    if group.fileURLs.first?.scheme == "photos" {
+                        if viewModel.hasLikedPhotos(in: group) {
+                            Button(action: {
+                                viewModel.keepLikedOnly(in: group)
+                            }) {
+                                Label(AppConstants.Strings.keepLikedOnly, systemImage: AppConstants.Icons.heartFill)
+                                    .font(.system(size: 12, weight: .medium))
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 5)
+                            }
+                            .buttonStyle(.frostPrimary)
+                        } else {
+                            Label(AppConstants.Strings.noLikedPhotos, systemImage: AppConstants.Icons.heartSlash)
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(.secondary)
+                        }
+                    }
                 }
             }
             .padding(.horizontal, 16)
@@ -50,6 +69,7 @@ struct DuplicateGroupRow: View {
                     DuplicateItemView(
                         url: url,
                         isSelected: viewModel.selectedFiles.contains(url),
+                        isLiked: viewModel.isFavorite(url: url),
                         metadata: viewModel.getFileMetadata(url: url),
                         onToggleSelection: { viewModel.toggleSelection(for: url) },
                         onDelete: { viewModel.deleteFile(url: url, in: group) },

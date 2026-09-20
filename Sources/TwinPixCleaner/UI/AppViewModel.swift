@@ -46,6 +46,7 @@ class AppViewModel: ObservableObject {
     private var scanTask: Task<Void, Never>?
     private var undoToastDismissTask: Task<Void, Never>?
     private var metadataCache: [URL: String] = [:]
+    private var favoriteCache: [URL: Bool] = [:]
 
     init() {
         Task.detached(priority: .background) {
@@ -159,6 +160,7 @@ class AppViewModel: ObservableObject {
         lastScanSkippedSummary = SkippedSummary()
         showSkippedFilesSheet = false
         metadataCache.removeAll()
+        favoriteCache.removeAll()
     }
     
     /// Selects all files in a group except the given one (the one to keep).
@@ -175,7 +177,33 @@ class AppViewModel: ObservableObject {
             selectedFiles.insert(fileURL)
         }
     }
-    
+
+    /// Whether a `photos://` URL is marked as a favorite in the Apple Photos library.
+    /// Non-Photos URLs (local-folder scans) always report `false`, since `PhotosAssetURL.asset(from:)`
+    /// only resolves `photos://` URLs — cached per URL since favorite status doesn't change within a scan session.
+    func isFavorite(url: URL) -> Bool {
+        if let cached = favoriteCache[url] { return cached }
+        let liked = PhotosAssetURL.asset(from: url)?.isFavorite ?? false
+        favoriteCache[url] = liked
+        return liked
+    }
+
+    /// Whether any photo in the group is liked.
+    func hasLikedPhotos(in group: DuplicateGroup) -> Bool {
+        group.fileURLs.contains { isFavorite(url: $0) }
+    }
+
+    /// Selects every non-liked file in a group for deletion, keeping the liked ones.
+    func keepLikedOnly(in group: DuplicateGroup) {
+        for fileURL in group.fileURLs {
+            if isFavorite(url: fileURL) {
+                selectedFiles.remove(fileURL)
+            } else {
+                selectedFiles.insert(fileURL)
+            }
+        }
+    }
+
     func toggleSelection(for url: URL) {
         if selectedFiles.contains(url) {
             selectedFiles.remove(url)

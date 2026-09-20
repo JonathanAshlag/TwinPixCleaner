@@ -3,6 +3,7 @@ import SwiftUI
 struct DuplicateItemView: View {
     let url: URL
     let isSelected: Bool
+    let isLiked: Bool
     let metadata: String
     let onToggleSelection: () -> Void
     let onDelete: () -> Void
@@ -56,6 +57,11 @@ struct DuplicateItemView: View {
             }
             .frame(width: 200, height: 200)
             .clipped()
+            .overlay(alignment: .topLeading) {
+                if isLiked {
+                    likedBadge
+                }
+            }
             .overlay {
                 if isHovering {
                     ZStack(alignment: .topLeading) {
@@ -74,7 +80,7 @@ struct DuplicateItemView: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(url.lastPathComponent)
-        .accessibilityValue(metadata)
+        .accessibilityValue(isLiked ? "\(metadata), Liked" : metadata)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
         .accessibilityAction(named: Text("Preview")) { onPreview() }
     }
@@ -98,6 +104,23 @@ struct DuplicateItemView: View {
                     .foregroundStyle(.white)
                     .symbolRenderingMode(.hierarchical)
             }
+        }
+        .shadow(color: .black.opacity(0.2), radius: 2, y: 1)
+        .padding(8)
+        .allowsHitTesting(false)
+    }
+
+    /// Purely decorative "liked" indicator — mirrors `selectionCheckbox`'s badge styling,
+    /// placed opposite it (top-leading) so the two never collide.
+    private var likedBadge: some View {
+        ZStack {
+            Circle()
+                .fill(Color.black.opacity(0.35))
+                .frame(width: 28, height: 28)
+
+            Image(systemName: AppConstants.Icons.heartFill)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.red)
         }
         .shadow(color: .black.opacity(0.2), radius: 2, y: 1)
         .padding(8)

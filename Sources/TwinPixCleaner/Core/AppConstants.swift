@@ -35,6 +35,9 @@ public enum AppConstants {
         public static let keepThis = "Keep This"
         public static let trash = "Trash"
         public static let selectAllDuplicates = "Select All Duplicates"
+        public static let keepLikedOnly = "Keep Liked Only"
+        public static let noLikedPhotos = "No Liked Photos"
+        public static let likedFirst = "Liked First"
         public static let undoDelete = "Undo Delete"
         
         public static let noDuplicatesFound = "No Duplicates Found"
@@ -51,6 +54,8 @@ public enum AppConstants {
         public static let exactMatch = "rectangle.on.rectangle"
         public static let folderPlus = "folder.fill.badge.plus"
         public static let checkmarkCircle = "checkmark.circle"
+        public static let heartFill = "heart.fill"
+        public static let heartSlash = "heart.slash"
         public static let photoCopies = "photo.on.rectangle.angled"
         public static let docText = "doc.text"
         public static let trash = "trash"

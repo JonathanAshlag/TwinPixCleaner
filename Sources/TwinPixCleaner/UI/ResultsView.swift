@@ -11,20 +11,30 @@ struct ResultsView: View {
     @ObservedObject var viewModel: AppViewModel
     let groups: [DuplicateGroup]
     @State private var sortOption: SortOption = .largestFirst
+    @State private var likedFirst: Bool = false
     @State private var isAnimatingCheckmark = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var sortedGroups: [DuplicateGroup] {
+        let base: [DuplicateGroup]
         switch sortOption {
         case .largestFirst:
-            return groups.sorted { $0.fileSize > $1.fileSize }
+            base = groups.sorted { $0.fileSize > $1.fileSize }
         case .smallestFirst:
-            return groups.sorted { $0.fileSize < $1.fileSize }
+            base = groups.sorted { $0.fileSize < $1.fileSize }
         case .mostCopies:
-            return groups.sorted { $0.fileURLs.count > $1.fileURLs.count }
+            base = groups.sorted { $0.fileURLs.count > $1.fileURLs.count }
         case .fewestCopies:
-            return groups.sorted { $0.fileURLs.count < $1.fileURLs.count }
+            base = groups.sorted { $0.fileURLs.count < $1.fileURLs.count }
         }
+
+        guard likedFirst else { return base }
+
+        // Stable partition: groups with a liked photo first, each block still ordered by
+        // `sortOption` (the filters preserve `base`'s relative order since it's already sorted).
+        let liked = base.filter { viewModel.hasLikedPhotos(in: $0) }
+        let unliked = base.filter { !viewModel.hasLikedPhotos(in: $0) }
+        return liked + unliked
     }
 
     var totalDuplicates: Int {
@@ -191,6 +201,17 @@ struct ResultsView: View {
                     .pickerStyle(.menu)
                     .frame(width: 150)
                 }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color.primary.opacity(0.06))
+                .cornerRadius(8)
+                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(.white.opacity(0.2), lineWidth: 0.5))
+
+                Toggle(isOn: $likedFirst) {
+                    Label(AppConstants.Strings.likedFirst, systemImage: AppConstants.Icons.heartFill)
+                        .font(.system(size: 12, weight: .medium))
+                }
+                .toggleStyle(.checkbox)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background(Color.primary.opacity(0.06))
